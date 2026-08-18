@@ -7,7 +7,6 @@
     "start": "electron .",
     "build": "electron-builder"
   },
-  "extraResources": [],
   "devDependencies": {
     "electron": "22.3.27",
     "electron-builder": "^24.13.3"
@@ -16,11 +15,13 @@
     "xlsx": "^0.18.5"
   },
   "build": {
+    "artifactName": "Excel工具-${target}.exe",
+    "extraResources": [],
     "win": {
       "icon": "icons/icon.ico",
       "target": [
-        {"target":"portable","arch":["x64"],"artifactName": "Excel工具.exe"},
-        {"target":"nsis","arch":["x64"],"artifactName": "Excel工具-setup.exe"}
+        {"target":"portable","arch":["x64"]},
+        {"target":"nsis","arch":["x64"]}
       ]
     },
     "nsis": {
