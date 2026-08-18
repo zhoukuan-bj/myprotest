@@ -1,0 +1,43 @@
+name: Build Windows Electron22
+
+# 触发方式：push到main分支自动跑；网页可以手动点按钮执行
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build_windows:
+    runs‑on: windows‑latest
+    env:
+      # 国内镜像，解决Electron22老版本下载超时
+      ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
+      ELECTRON_BUILDER_BINARIES_MIRROR: https://npmmirror.com/mirrors/electron‑builder‑binaries/
+
+    steps:
+      # 1.拉取代码
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      # 2.安装Node18（Electron22兼容最高Node18）
+      - name: Setup Node.js 18
+        uses: actions/setup‑node@v4
+        with:
+          node‑version: 18
+          cache: 'npm'
+          registry‑url: 'https://registry.npmmirror.com'
+
+      # 3.npm安装依赖
+      - name: npm install dependencies
+        run: npm install
+
+      # 4.执行打包，输出dist/Excel工具‑setup.exe
+      - name: run electron‑builder build
+        run: npm run build
+
+      # 5.上传产物，编译完可以网页下载
+      - name: Upload setup artifact
+        uses: actions/upload‑artifact@v4
+        with:
+          name: windows‑installer
+          path: dist/*.exe

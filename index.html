@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>JS桌面工具</title>
+    <style>
+        * {margin:0;padding:0;box-sizing:border-box;font-size:14px;}
+        .container {display:flex;height:100vh;}
+        /* 左侧功能菜单栏 */
+        .sidebar {width:180px;background:#2c3e50;color:#fff;padding:10px;}
+        .sidebar button {
+            width:100%;padding:12px;margin:4px 0;border:none;background:#34495e;color:#fff;cursor:pointer;
+        }
+        .sidebar button.active {background:#3498db;}
+        /* 右侧内容区 */
+        .content {flex:1;padding:20px;overflow:auto;}
+        /* 功能面板，默认隐藏 */
+        .func-panel {display:none;border:1px solid #ddd;padding:15px;border-radius:6px;margin-bottom:15px;}
+        .func-panel.show {display:block;}
+        .row {margin:10px 0;}
+        label {display:inline-block;width:120px;}
+        input[type="text"],input[type="number"] {
+            padding:6px;width:320px;border:1px solid #ccc;border-radius:4px;
+        }
+        .btn {
+            padding:7px 14px;background:#2980b9;color:white;border:none;border-radius:4px;cursor:pointer;margin:0 4px;
+        }
+        .btn-run {background:#27ae60;}
+        #result-box {
+            margin-top:20px;padding:15px;border:1px solid #ccc;min-height:120px;white-space:pre-wrap;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 左侧功能切换菜单 -->
+    <div class="sidebar">
+        <h3 style="padding:8px;text-align:center">功能列表</h3>
+        <button class="func-btn active" data-func="func1">多次转办热点分布</button>
+        <button class="func-btn" data-func="func2">指定热点的多次转办</button>
+        <button class="func-btn" data-func="func3">指定热点的多次转办</button>
+        <button class="func-btn" data-func="func4">一人多单及其热点分布</button>
+    </div>
+
+    <!-- 右侧操作面板 -->
+    <div class="content">
+        <div class="row">
+            <label>选择文件：</label>
+            <input type="text" id="f0_filePath" readonly placeholder="点击选择文件按钮">
+            <button class="btn" onclick="selectFile('f0_filePath')">选择文件</button>
+        </div>
+        <!-- 功能1面板：文件路径 + 编码参数 -->
+        <div class="func-panel show" id="func1">
+            <h3>功能1：指定热点等级和转办次数，显示热点分布</h3>
+            <div class="row">
+                <label>转办次数最小值：</label>
+                <input type="text" id="f1_min" value="">
+            </div>
+            <div class="row">
+                <label>转办次数最大值：</label>
+                <input type="text" id="f1_max" value="">
+            </div>
+            <div class="row">
+                <select id="f1_level">
+                    <option value=1>一级热点</option>
+                    <option value=2>二级热点</option>
+                    <option value=3>三级热点</option>
+                    <option value=4>四级热点</option>
+                </select>
+            </div>
+            <div class="row">
+                <button class="btn btn-run" onclick="executeFunc('func1')">执行功能</button>
+            </div>
+        </div>
+
+        <!-- 功能2面板：文件夹路径 + 过滤关键词 -->
+        <div class="func-panel" id="func2">
+            <h3>功能2：指定热点和转办次数，显示结果（额外显示同热点转办次数更高的）</h3>
+            <div class="row">
+                <label>转办次数最小值：</label>
+                <input type="text" id="f2_min" value="">
+            </div>
+            <div class="row">
+                <label>转办次数最大值：</label>
+                <input type="text" id="f2_max" value="">
+            </div>
+            <div class="row">
+                <select id="f2_level">
+                    <option value=1>一级热点</option>
+                    <option value=2>二级热点</option>
+                    <option value=3>三级热点</option>
+                    <option value=4>四级热点</option>
+                </select>
+            </div>
+            <div class="row">
+                <label>具体热点名称：</label>
+                <input type="text" id="f2_name" value="">
+            </div>
+            <div class="row">
+                <button class="btn btn-run" onclick="executeFunc('func2')">执行功能</button>
+            </div>
+        </div>
+
+        <!-- 功能3面板：纯数值参数，无文件 -->
+        <div class="func-panel" id="func3">
+            <h3>功能3：指定热点和转办次数，显示结果（剔除同名非最高转办）</h3>
+            <div class="row">
+                <label>转办次数最小值：</label>
+                <input type="text" id="f3_min" value="">
+            </div>
+            <div class="row">
+                <label>转办次数最大值：</label>
+                <input type="text" id="f3_max" value="">
+            </div>
+            <div class="row">
+                <select id="f3_level">
+                    <option value=1>一级热点</option>
+                    <option value=2>二级热点</option>
+                    <option value=3>三级热点</option>
+                    <option value=4>四级热点</option>
+                </select>
+            </div>
+            <div class="row">
+                <label>具体热点名称：</label>
+                <input type="text" id="f3_name" value="">
+            </div>
+            <div class="row" style="display:flex;align-items:center;gap:12px;">
+                <button class="btn btn-run" onclick="executeFunc('func3')">执行功能</button>
+                <label style="cursor:pointer;margin:0;">
+                    <input type="checkbox" id="f3_fileCheck"> 生成结果文件
+                </label>
+            </div>
+        </div>
+
+        <!-- 功能4面板：纯数值参数，无文件 -->
+        <div class="func-panel" id="func4">
+            <h3>功能4：单人多工单及其在指定热点等级分布显示</h3>
+            <div class="row">
+                <label>单人工单件数最小值：</label>
+                <input type="text" id="f4_min" value="">
+            </div>
+            <div class="row">
+                <label>单人工单件数最大值：</label>
+                <input type="text" id="f4_max" value="">
+            </div>
+            <div class="row">
+                <select id="f4_level">
+                    <option value=1>一级热点</option>
+                    <option value=2>二级热点</option>
+                    <option value=3>三级热点</option>
+                    <option value=4>四级热点</option>
+                </select>
+            </div>
+            <div class="row" style="display:flex;align-items:center;gap:12px;">
+                <button class="btn btn-run" onclick="executeFunc('func4')">执行功能</button>
+                <label style="cursor:pointer;margin:0;">
+                    <input type="checkbox" id="f4_fileCheck"> 生成结果文件
+                </label>
+            </div>
+        </div>
+
+        <!-- 结果输出区域 -->
+         <div id="loading-tip" style="color:#2980b9;font-weight:bold;margin:10px 0;display:none;">
+            ⏳ 任务处理中，请稍候...
+        </div>
+        <h3>运行结果</h3>
+        <div id="result-box"></div>
+    </div>
+</div>
+
+<script>
+const path = require("path");
+const XLSX = require("xlsx");
+const { ipcRenderer } = require('electron');
+const resultBox = document.getElementById('result-box');
+// 缓存原始console
+const originalLog = console.log;
+let logCache = [];
+// 重写console.log，同时输出控制台+存入日志数组
+// 实现简易的printf格式化，处理 %s %d %j %o
+function formatLogStr(fmt, ...args) {
+    // 专门序列化 Map/Set 工具
+    function stringifyValue(val) {
+        if (val === null || val === undefined) {
+            return String(val);
+        }
+        // Map 转为数组格式展示
+        if (val instanceof Map) {
+            const arr = [];
+            for (const [k, v] of val) {
+                arr.push([k, v]);
+            }
+            return `Map(${val.size}) ` + JSON.stringify(arr, null, 2);
+        }
+        // Set 转为数组
+        if (val instanceof Set) {
+            return `Set(${val.size}) ` + JSON.stringify([...val], null, 2);
+        }
+        // 普通对象、数组
+        if (typeof val === 'object') {
+            return JSON.stringify(val, null, 2);
+        }
+        return String(val);
+    }
+
+    if (typeof fmt !== 'string') {
+        // 第一个参数不是字符串，直接全部拼接
+        const allItems = [fmt, ...args];
+        return allItems.map(stringifyValue).join(' ');
+    }
+    let argIdx = 0;
+    // 支持 %s %d %f %j %o 常用占位符
+    let output = fmt.replace(/%[sdjo]/g, (placeholder)=>{
+        const val = args[argIdx++];
+        const strVal = stringifyValue(val);
+        if (placeholder === '%d' || placeholder === '%f') {
+            return Number(val) || 0;
+        }
+        if(placeholder === '%j' || placeholder === '%o'){
+            return JSON.stringify(val, null, 2);
+        }
+        return strVal;
+    })
+    // 剩下多余参数追加在后面
+   if (argIdx < args.length) {
+        const extraArgs = args.slice(argIdx).map(stringifyValue);
+        output += ' ' + extraArgs.join(' ');
+    }
+    return output;
+}
+
+console.log = function (...args) {
+    originalLog.apply(console, args);
+    const text = formatLogStr(...args);
+    logCache.push(text);
+    resultBox.innerText = logCache.join('\n');
+}
+
+// 清空日志
+function clearLog(){
+    logCache = []
+    resultBox.innerText = ''
+}
+// ===================== 1. 功能面板切换逻辑 =====================
+document.querySelectorAll('.func-btn').forEach(btn=>{
+    btn.onclick = function(){
+        // 清除激活状态
+        document.querySelectorAll('.func-btn').forEach(b=>b.classList.remove('active'));
+        document.querySelectorAll('.func-panel').forEach(p=>p.classList.remove('show'));
+        // 激活当前按钮和面板
+        this.classList.add('active');
+        const funcId = this.dataset.func;
+        document.getElementById(funcId).classList.add('show');
+        resultBox.innerText = ''; // 清空上次结果
+    }
+})
+
+// ===================== 2. 文件/文件夹选择封装 =====================
+// 选择单个文件，回填到输入框
+async function selectFile(inputId){
+    const spath = await ipcRenderer.invoke('open-file-dialog');
+    // const spath = await window.api.openFileDialog();
+    if(spath) document.getElementById(inputId).value = spath;
+}
+// 选择文件夹，回填到输入框
+async function selectFolder(inputId){
+    const spath = await ipcRenderer.invoke('open-folder-dialog');
+    // const spath = await window.api.openFileDialog();
+    if(spath) document.getElementById(inputId).value = spath;
+}
+
+// ===================== 3. 【你的核心业务JS函数】直接写在这里 =====================
+var namelist = ["单元", "号", "组", "岗", "街", "国道", "学校", "医院", "区", "湾", "村", "镇"];
+const refer = ['一级热点', '二级热点', '三级热点', '四级热点'];
+
+//去除所有括号以及之中的内容
+function GetMainText(str)
+{
+    //console.log("source:", str);
+    str = str.replace(/\(.*?\)/g, '');
+    str = str.replace(/\（.*?\）/g, '');
+    str = str.replace(/\[.*?\]/g, '');
+    str = str.replace(/\【.*?\】/g, '');
+    str = str.replace(/\【.*?\】/g, '');
+    //对于尾部存在"（尽快处理"这种残缺格式的处理
+    str = str.replace(/\(.*/g, '');
+    str = str.replace(/\（.*/g, '');
+    return str;
+}
+
+function inputcheckA(arg)
+{
+    if(arg[1] > arg[2])
+    {
+        let ext = arg[1];
+        arg[1] = arg[2];
+        arg[2] = arg[1];
+    }
+    if(arg[3] > 4 || arg[3] < 1)
+    {
+        arg[3] = 1;
+        console.log('热点等级输入不合理,值自动改为1');
+    }
+    // console.log(arg);
+    return arg;
+}
+
+function xlsxfilecheck(fname)
+{
+    let fs = require('fs');
+    let fp = require('path');
+    if(fname == '')
+    {
+        console.log('错误：未选择文件');
+        return false;
+    }
+    let fnamearr = fname.split('.');
+    //console.log(fnamearr.length);
+    if(fnamearr[fnamearr.length - 1] != 'xlsx')
+    {
+        console.log('目标文件选择错误（必须是xlsx文件，且必须同平台导出格式一致）');
+        return false;
+    }
+
+    if(fs.existsSync(fname)) 
+    {
+        return true;
+    }
+    else
+    {
+        console.log('目标文件选择错误---指定文件不存在');
+        return false;
+    }
+    return false;
+}
+
+function filecheck_getNewname(fname)
+{
+    let fs = require('fs');
+    let fp = require('path');
+    let ename = fname, trycot = 1;
+    let fpath = fp.join('./', ename);
+    let fnamearr = ename.split('.');
+    while (fs.existsSync(fpath)) {
+        //文件已存在
+        ename = `${fnamearr[0]}(${trycot}).${fnamearr[1]}`; 
+        fpath = fp.join('./', ename);
+        trycot++;
+    }
+    return ename;
+}
+
+function getNowTimeStr() {
+  const date = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const y = date.getFullYear();
+  const m = pad(date.getMonth() + 1);
+  const d = pad(date.getDate());
+  const h = pad(date.getHours());
+  const mi = pad(date.getMinutes());
+  const s = pad(date.getSeconds());
+  return `${y}${m}${d}${h}${mi}${s}`;
+}
+
+function chineseToNumber(chineseStr) {
+    const map = {
+        '零': 0, '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9,
+        '十': 10, '百': 100, '千': 1000, '万': 10000, '亿': 100000000
+    };
+
+    let total = 0;
+    let section = 0;
+    let curr = 0;
+
+    for (const char of chineseStr) {
+        const num = map[char];
+        if (num === undefined) continue;
+
+        if (num < 10) {
+            curr = num;
+        } else {
+            if (curr === 0) curr = 1;
+            section += curr * num;
+            curr = 0;
+
+            if (num === 10000 || num === 100000000) {
+                total += section * num;
+                section = 0;
+            }
+        }
+    }
+    total += section + curr;
+    return total;
+}
+
+//转办次数区间内的各项工单数(a,b,c)---最低次数-最高次数-热点等级
+function LevelCount(ipath, min, max, level)
+{
+    console.log("开始执行...");
+    const filePath = path.resolve(ipath);
+    const workbook = XLSX.readFile(filePath);
+    const sheetNames = workbook.SheetNames;
+    const targetSheet = sheetNames[0];
+    const sheet = workbook.Sheets[targetSheet];
+    const dataRange = XLSX.utils.decode_range(sheet['!ref']);
+    const totalRows = dataRange.e.r + 1;
+    const totalCols = dataRange.e.c + 1;
+    const sheetdata = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+    var aim = "次转办";
+    var levmap = new Map();
+    var prounit_count = new Map();
+    var c = level;
+    var num = 0;
+    for (var i = 1; i < totalRows; i++) {
+        let eventcode = sheetdata[i][0];
+        let textvalue = sheetdata[i][1];
+        let prounit = sheetdata[i][14];
+        if(prounit == '')
+        {
+            prounit = '无';
+        }
+        let levelsy = [sheetdata[i][30], sheetdata[i][31], sheetdata[i][32], sheetdata[i][33]];
+        let textlength = textvalue.length;
+        let pos = textvalue.indexOf(aim);
+        if(pos != -1)
+        {
+            let pos1 = textvalue.lastIndexOf("（", pos - 1);
+            if(pos - pos1 > 4)
+            {
+                pos1 = textvalue.lastIndexOf("(", pos - 1);
+            }
+            let count = chineseToNumber(textvalue.substring(pos1 + 1, pos + 3));
+            //console.log("count:", count, textvalue, levelsy);
+            if(count >= min && count <= max)
+            {
+                num++;
+                //let maintext = GetMainText(textvalue);
+                console.log("count:", count, eventcode, textvalue);
+                if(levmap.has(levelsy[c-1]))
+                {
+                    levmap.set(levelsy[c-1], levmap.get(levelsy[c-1])+1);
+                }
+                else
+                {
+                    levmap.set(levelsy[c-1], 1);
+                }
+                if(prounit_count.has(prounit))
+                {
+                    prounit_count.set(prounit, prounit_count.get(prounit)+1);
+                }
+                else
+                {
+                    prounit_count.set(prounit, 1);
+                }
+            }
+        }
+    }
+
+    console.log('\n总计%d件工单，所属%s类别%d种:', num, refer[c-1], levmap.size);
+    let sortedArray = Array.from(levmap).sort((a, b) => b[1] - a[1]);
+    for(let [a, b] of sortedArray)
+    {
+        console.log('%s:%s', a, b);
+    }
+    console.log('指定转办次数范围的转办工单处理部门分布如下所示：');
+    let sorted = Array.from(prounit_count).sort((a, b) => b[1] - a[1]);
+    for(let [a, b] of sorted)
+    {
+        console.log('%s:%s', a, b);
+    }
+    console.log("---执行结束---");
+}
+
+//转办次数区间内，指定项的工单详情(a,b,c,str)---最低次数-最高次数-热点等级-具体热点
+function LevelCount_ShowMax(ipath, min, max, lev, name)
+{
+    console.log("开始执行...");
+    const filePath = path.resolve(ipath);
+    const workbook = XLSX.readFile(filePath);
+    const sheetNames = workbook.SheetNames;
+    const targetSheet = sheetNames[0];
+    const sheet = workbook.Sheets[targetSheet];
+    //这里可替换
+    const dataRange = XLSX.utils.decode_range(sheet['!ref']);
+    const totalRows = dataRange.e.r + 1;
+    const totalCols = dataRange.e.c + 1;
+    const sheetdata = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    // let Presheet = XLSX.utils.sheet_to_json(sheet, { header: 1 });;
+    // let levaddr = 29 + Number(lev);
+    // const sheetdata = Presheet.filter((row) => {
+    //     return row[levaddr] === name;
+    // });
+    // let totalRows = sheetdata.length;
+    // let totalCols = sheetdata[0].length;
+
+    var aim = "次转办";
+    var event_maxcount = new Map();
+    var prounit_count = new Map();
+    var c = lev, str = name;
+    for (var i = 1; i < totalRows; i++) {
+        let eventcode = sheetdata[i][0];
+        let textvalue = sheetdata[i][1];
+        let prounit = sheetdata[i][14];
+        if(prounit == '')
+        {
+            prounit = '无';
+        }
+        let levelsy = [sheetdata[i][30], sheetdata[i][31], sheetdata[i][32], sheetdata[i][33]];
+        let textlength = textvalue.length;
+        if(levelsy[c-1] == str)
+        {
+            let pos = textvalue.indexOf(aim);
+            if(pos != -1)
+            {
+                let pos1 = textvalue.lastIndexOf("（", pos - 1);
+                if(pos - pos1 > 4)
+                {
+                    pos1 = textvalue.lastIndexOf("(", pos - 1);
+                }
+                let count = chineseToNumber(textvalue.substring(pos1 + 1, pos + 3));
+                //开始记录同名事件在表内记录的最大转办次数
+                let maintext = GetMainText(textvalue);
+                if(event_maxcount.has(maintext))
+                {
+                    if(event_maxcount.get(maintext) < count)    //存在更高次转办的同一件事
+                    {
+                        event_maxcount.set(maintext, count); 
+                    }
+                }
+                else
+                {
+                    event_maxcount.set(maintext, count); 
+                }
+                //或许可以改成先记录最高次数表（或可去掉if(levelsy[c-1] == str)），
+                //然后第二遍遍历的时候再加上，之后先对比最高次数再输出
+                if(count >= min && count <= max)
+                {
+                    console.log("count:", count, eventcode, maintext);
+                    if(prounit_count.has(prounit))
+                    {
+                        prounit_count.set(prounit, prounit_count.get(prounit)+1);
+                    }
+                    else
+                    {
+                        prounit_count.set(prounit, 1);
+                    }
+                }
+            }
+        }
+    }
+    console.log('该热点的转办工单总数:%d', event_maxcount.size);
+    console.log('同一热点下更高次数转办的工单有如下所示：');
+    for(let [a, b] of event_maxcount)
+    {
+        if(b > max)
+        {
+            console.log('%s:%s', b, a);
+        }
+    }
+    console.log('该热点的转办工单处理部门分布如下所示：');
+    let sorted = Array.from(prounit_count).sort((a, b) => b[1] - a[1]);
+    for(let [a, b] of sorted)
+    {
+        console.log('%s:%s', a, b);
+    }
+    console.log("---执行结束---");
+}
+
+//转办次数区间内，指定项的工单详情，去除非最高同名事件(a,b,c,str)---最低次数-最高次数-热点等级-具体热点
+function LevelCount_OnlyShowMax(ipath, min, max, lev, name, fc)
+{
+    console.log("开始执行...");
+    const filePath = path.resolve(ipath);
+    const workbook = XLSX.readFile(filePath);
+    const sheetNames = workbook.SheetNames;
+    const targetSheet = sheetNames[0];
+    const sheet = workbook.Sheets[targetSheet];
+    //这里可替换
+    const dataRange = XLSX.utils.decode_range(sheet['!ref']);
+    const totalRows = dataRange.e.r + 1;
+    const totalCols = dataRange.e.c + 1;
+    const sheetdata = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    // let Presheet = XLSX.utils.sheet_to_json(sheet, { header: 1 });;
+    // let levaddr = 29 + Number(lev);
+    // const sheetdata = Presheet.filter((row) => {
+    //     return row[levaddr] === name;
+    // });
+    // let totalRows = sheetdata.length;
+    // let totalCols = sheetdata[0].length;
+    
+    var aim = "次转办";
+    var event_maxcount = new Map();  //事件-最大转办次数
+    var prounit_count = new Map();  //单位-出现次数
+    var c = lev, str = name;
+    for (var i = 1; i < totalRows; i++) {
+        let eventcode = sheetdata[i][0];
+        let textvalue = sheetdata[i][1];
+        let levelsy = [sheetdata[i][30], sheetdata[i][31], sheetdata[i][32], sheetdata[i][33]];
+        let textlength = textvalue.length;
+        let pos = textvalue.indexOf(aim);
+        if(pos != -1)
+        {
+            let pos1 = textvalue.lastIndexOf("（", pos - 1);
+            if(pos - pos1 > 4)
+            {
+                pos1 = textvalue.lastIndexOf("(", pos - 1);
+            }
+            let count = chineseToNumber(textvalue.substring(pos1 + 1, pos + 3));
+            //开始记录同名事件在表内记录的最大转办次数
+            let maintext = GetMainText(textvalue);
+            if(event_maxcount.has(maintext))
+            {
+                if(event_maxcount.get(maintext) < count)    //存在更高次转办的同一件事
+                {
+                    event_maxcount.set(maintext, count); 
+                }
+            }
+            else
+            {
+                event_maxcount.set(maintext, count); 
+            }
+        }
+    }
+
+    let filteredData = sheetdata.slice(0, 1);
+    for (var i = 1; i < totalRows; i++) {
+        let eventcode = sheetdata[i][0];
+        let textvalue = sheetdata[i][1];
+        let prounit = sheetdata[i][14];
+        if(prounit == '')
+        {
+            prounit = '无';
+        }
+        let levelsy = [sheetdata[i][30], sheetdata[i][31], sheetdata[i][32], sheetdata[i][33]];
+        let textlength = textvalue.length;
+        if(levelsy[c-1] == str)
+        {
+            let pos = textvalue.indexOf(aim);
+            if(pos != -1)
+            {
+                let pos1 = textvalue.lastIndexOf("（", pos - 1);
+                if(pos - pos1 > 4)
+                {
+                    pos1 = textvalue.lastIndexOf("(", pos - 1);
+                }
+                let count = chineseToNumber(textvalue.substring(pos1 + 1, pos + 3));
+                if(count >= min && count <= max)
+                {
+                    let maintext = GetMainText(textvalue);
+                    if(event_maxcount.get(maintext) == count)   //只输出是最大转办的同名事件
+                    {
+                        console.log("count:", count, eventcode, maintext);
+                        //console.log(sheetdata[0][14], ":", prounit);
+                        if(prounit_count.has(prounit))
+                        {
+                            prounit_count.set(prounit, prounit_count.get(prounit)+1);
+                        }
+                        else
+                        {
+                            prounit_count.set(prounit, 1);
+                        }
+                        filteredData.push(sheetdata[i]); //得有第一行作为表头才能aoa
+                    }
+                }
+            }
+        }
+    }
+    console.log('该热点的转办工单处理部门分布如下所示（已排除同名非最高转办次数的工单）：');
+    let sorted = Array.from(prounit_count).sort((a, b) => b[1] - a[1]);
+    for(let [a, b] of sorted)
+    {
+        console.log('%s:%s', a, b);
+    }
+
+    if(fc)
+    {
+        const newWorksheet = XLSX.utils.aoa_to_sheet(filteredData);
+        //newWorksheet['!cols'][10] = [ { wch: 75 } ];
+        //newWorksheet['!cols'] = Array(totalCols).fill({ wch: 50 });
+        newWorksheet['!cols'] = [ { wch: 15 }, { wch: 50 }, { wch: 20 } ];
+        const newWorkbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(newWorkbook, newWorksheet, '筛选结果');
+        let ntime = getNowTimeStr();
+        let resfilename = `${refer[lev-1]}_${name}_转办次数${min}-${max}次的筛选结果_${ntime}.xlsx`;
+        let ename = filecheck_getNewname(resfilename);
+        XLSX.writeFile(newWorkbook, ename);
+        console.log('新表已生成：', ename);
+    }
+    console.log("---执行结束---");
+}
+
+//输出电话-工单数，参数为筛选的最小最大工单数，例如5，7，就是单人至少产生了5件工单，至多7件工单范围内的才显示
+function CountRepAction(ipath, min, max, level, fc)
+{
+    console.log("开始执行...");
+    const filePath = path.resolve(ipath);
+    const workbook = XLSX.readFile(filePath);
+    const sheetNames = workbook.SheetNames;
+    const targetSheet = sheetNames[0];
+    const sheet = workbook.Sheets[targetSheet];
+    const dataRange = XLSX.utils.decode_range(sheet['!ref']);
+    const totalRows = dataRange.e.r + 1;
+    const totalCols = dataRange.e.c + 1;
+    const sheetdata = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    
+    let result = ['电话', '工单数'];
+    let mymap = new Map();
+    for (var i = 1; i < totalRows; i++) {
+        let eventcode = sheetdata[i][0];
+        let telnumber = sheetdata[i][6];
+        let levelsy = [sheetdata[i][30], sheetdata[i][31], sheetdata[i][32], sheetdata[i][33]];
+        if(mymap.has(telnumber))
+        {
+            mymap.set(telnumber, mymap.get(telnumber) + 1);
+        }
+        else
+        {
+            mymap.set(telnumber, 1);
+        }
+    }
+    if(min >= 2)
+    {
+        for(let [a, b] of mymap)
+        {
+            if(b < min || b > max)
+            {
+                mymap.delete(a);
+            }
+        }
+    }
+    // console.log(mymap);
+    // let sorted = Array.from(mymap).sort((a, b) => b[1] - a[1]);
+    for(let [a, b] of mymap)
+    {
+        console.log('电话号%s:%s件工单', a, b);
+    }
+    console.log('各人工单热点分布：');
+
+    for(let [a, b] of mymap)
+    {
+        let text_count_map = new Map();
+        const Secfiltered = sheetdata.filter((row, i) => {
+            if (i === 0)    //表头还要么，返回true要，false不要
+            {
+                return false;
+            }
+            return row[6] === a;
+        });
+        for(var x = 0; x < Secfiltered.length; x++)
+        {
+            let leveltext = Secfiltered[x][30];
+            for(var j = 1; j < level; j++)
+            {
+                leveltext = leveltext + '-' + Secfiltered[x][30+j];
+            }
+            if(text_count_map.has(leveltext))
+            {
+                text_count_map.set(leveltext, text_count_map.get(leveltext) + 1);
+            }
+            else
+            {
+                text_count_map.set(leveltext, 1);
+            }
+        }
+        console.log('%s的工单种类:%d', a, text_count_map.size);
+        for(let [key, value] of text_count_map) //或许可以把符合工单条件的每个人的表存下来？
+        {
+            console.log('%s:%d', key, value);
+        }
+        console.log('');
+    }
+    if(fc)
+    {
+        const filteredData = [ ['电话号', '工单数量'],  ...Array.from(mymap.entries())];
+        const newWorksheet = XLSX.utils.aoa_to_sheet(filteredData);
+        newWorksheet['!cols'] = [ { wch: 50 }, { wch: 30 }];
+        const newWorkbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(newWorkbook, newWorksheet, '筛选结果');
+        let ntime = getNowTimeStr();
+        let resfilename = `同一联系人相关工单数为${min}-${max}件的筛选结果'_${ntime}.xlsx`;
+        let ename = filecheck_getNewname(resfilename);
+        XLSX.writeFile(newWorkbook, ename);
+        console.log('新表已生成：%s', ename);
+    }
+    console.log("---执行结束---");
+}
+
+// ===================== 4. 统一执行入口：读取当前面板参数，调用对应函数 =====================
+function executeFunc(funcId){
+    let pathtext = document.getElementById('f0_filePath').value;
+    if(!xlsxfilecheck(pathtext))
+    {
+        return;
+    }
+    let args = [];
+    let targetFunc;
+    const loadingTip = document.getElementById('loading-tip');
+    const runButtons = document.querySelectorAll('.btn btn-run');
+    clearLog();
+    loadingTip.style.display = 'block';
+    // 禁用所有执行按钮，避免重复触发
+    runButtons.forEach(btn => btn.disabled = true);
+    setTimeout(() => {
+        try {
+            switch(funcId){
+                case 'func1':
+                    args = [
+                        document.getElementById('f0_filePath').value,
+                        document.getElementById('f1_min').value,
+                        document.getElementById('f1_max').value,
+                        document.getElementById('f1_level').value
+                    ];
+                    args = inputcheckA(args);
+                    targetFunc = LevelCount;
+                    break
+                case 'func2':
+                    args = [
+                        document.getElementById('f0_filePath').value,
+                        document.getElementById('f2_min').value,
+                        document.getElementById('f2_max').value,
+                        document.getElementById('f2_level').value,
+                        document.getElementById('f2_name').value
+                    ];
+                    args = inputcheckA(args);
+                    targetFunc = LevelCount_ShowMax;
+                    break
+                case 'func3':
+                    args = [
+                        document.getElementById('f0_filePath').value,
+                        document.getElementById('f3_min').value,
+                        document.getElementById('f3_max').value,
+                        document.getElementById('f3_level').value,
+                        document.getElementById('f3_name').value,
+                        document.getElementById('f3_fileCheck').checked
+                    ]
+                    args = inputcheckA(args);
+                    targetFunc = LevelCount_OnlyShowMax;
+                    break
+                case 'func4':
+                    args = [
+                        document.getElementById('f0_filePath').value,
+                        document.getElementById('f4_min').value,
+                        document.getElementById('f4_max').value,
+                        document.getElementById('f4_level').value,
+                        document.getElementById('f4_fileCheck').checked
+                    ]
+                    args = inputcheckA(args);
+                    targetFunc = CountRepAction;
+                    break
+                default:
+                    console.log("未识别的功能ID");
+                    return;
+            }
+            // 发送到主进程调度执行
+            targetFunc(...args);
+        }
+        catch (err) {
+            console.log("【执行异常】%s\n堆栈：%s", err.message, err.stack);
+        } finally {
+            const loadingTip = document.getElementById('loading-tip');
+            const runButtons = document.querySelectorAll('.btn btn-run');
+            loadingTip.style.display = 'none';
+            runButtons.forEach(btn => btn.disabled = false);
+        }
+    }, 50);
+}
+</script>
+</body>
+</html>
