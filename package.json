@@ -1,6 +1,8 @@
 {
   "homepage": "https://local-tool/internal",
   "name": "sjexcel-tool",
+  "author": "szzk001",
+  "publish": null,
   "version": "1.0.0",
   "main": "main.js",
   "scripts": {
