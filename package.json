@@ -8,13 +8,6 @@
     "build": "electron-builder"
   },
   "extraResources": [],
-  "files": [
-    "main.js",
-    "index.html",
-    "icons/",
-    "!node_modules/electron/**",
-    "!node_modules/electron-builder/**"
-  ],
   "devDependencies": {
     "electron": "22.3.27",
     "electron-builder": "^24.13.3"
@@ -33,6 +26,13 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
-    }
+    },
+    "files": [
+      "main.js",
+      "index.html",
+      "icons/",
+      "!node_modules/electron/**",
+      "!node_modules/electron-builder/**"
+    ]
   }
 }
