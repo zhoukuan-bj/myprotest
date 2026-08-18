@@ -24,20 +24,17 @@
   },
   "build": {
     "win": {
+      "icon": "icons/icon.ico",
       "target": [
         {"target":"portable","arch":["x64"]},
         {"target":"nsis","arch":["x64"]}
       ]
     },
+    "artifactName": "Excel工具-${target}.exe",
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "artifactName": "Excel工具-setup.exe"
-    },
-    "portable": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "artifactName": "Excel工具.exe"
     }
   }
 }
