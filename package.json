@@ -5,7 +5,8 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder"
+    "build": "electron-builder",
+    "postbuild": "cd dist && mv sjexcel-tool-portable.exe \"Excel工具.exe\" && mv sjexcel-tool-nsis.exe \"Excel工具-setup.exe\""
   },
   "devDependencies": {
     "electron": "22.3.27",
@@ -15,7 +16,6 @@
     "xlsx": "^0.18.5"
   },
   "build": {
-    "artifactName": "Excel工具-${target}.exe",
     "extraResources": [],
     "win": {
       "icon": "icons/icon.ico",
