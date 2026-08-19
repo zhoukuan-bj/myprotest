@@ -176,7 +176,14 @@ const resultBox = document.getElementById('result-box');
 // 缓存原始console
 const originalLog = console.log;
 let logCache = [];
-// 重写console.log，同时输出控制台+存入日志数组
+let exeDir;
+if(process.env.PORTABLE_EXECUTABLE_DIR){
+  // portable便携模式：取环境变量给出的exe所在文件夹
+  exeDir = process.env.PORTABLE_EXECUTABLE_DIR;
+}else{
+  // NSIS安装包 / linux统信UOS：取exe文件所在目录
+  exeDir = path.dirname(ipcRenderer.getPath('exe'));
+}
 // 实现简易的printf格式化，处理 %s %d %j %o
 function formatLogStr(fmt, ...args) {
     // 专门序列化 Map/Set 工具
@@ -290,7 +297,7 @@ function GetMainText(str)
 
 function inputcheckA(arg)
 {
-    if(arg[1] > arg[2])
+    if(Number(arg[1]) > Number(arg[2]))
     {
         let ext = arg[1];
         arg[1] = arg[2];
@@ -334,6 +341,7 @@ function xlsxfilecheck(fname)
     return false;
 }
 
+//windows不匹配，并且应该用不到了
 function filecheck_getNewname(fname)
 {
     let fs = require('fs');
@@ -683,7 +691,8 @@ function LevelCount_OnlyShowMax(ipath, min, max, lev, name, fc)
         XLSX.utils.book_append_sheet(newWorkbook, newWorksheet, '筛选结果');
         let ntime = getNowTimeStr();
         let resfilename = `${refer[lev-1]}_${name}_转办次数${min}-${max}次的筛选结果_${ntime}.xlsx`;
-        let ename = filecheck_getNewname(resfilename);
+        // let ename = filecheck_getNewname(resfilename);
+        let ename = path.join(exeDir, resfilename);
         XLSX.writeFile(newWorkbook, ename);
         console.log('新表已生成：', ename);
     }
@@ -779,7 +788,8 @@ function CountRepAction(ipath, min, max, level, fc)
         XLSX.utils.book_append_sheet(newWorkbook, newWorksheet, '筛选结果');
         let ntime = getNowTimeStr();
         let resfilename = `同一联系人相关工单数为${min}-${max}件的筛选结果'_${ntime}.xlsx`;
-        let ename = filecheck_getNewname(resfilename);
+        // let ename = filecheck_getNewname(resfilename);
+        let ename = path.join(exeDir, resfilename);
         XLSX.writeFile(newWorkbook, ename);
         console.log('新表已生成：%s', ename);
     }
