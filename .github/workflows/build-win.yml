@@ -36,14 +36,14 @@ jobs:
         run: npm run build
       - name: Rename artifacts
         run: |
-          Rename‑Item "dist\sjexcel‑tool 1.0.0.exe" "Excel工具.exe"
-          Rename‑Item "dist\sjexcel‑tool Setup 1.0.0.exe" "Excel工具‑setup.exe"
+          Rename-Item "dist\sjexcel-tool 1.0.0.exe" "Excel工具.exe"
+          Rename-Item "dist\sjexcel-tool Setup 1.0.0.exe" "Excel工具‑setup.exe"
         shell: pwsh
       # 5.上传产物，编译完可以网页下载
       - name: Upload setup artifact
         uses: actions/upload-artifact@v4
         with:
-          name: windows‑build
+          name: windows-build
           path: |
             dist\Excel工具.exe
             dist\Excel工具‑setup.exe
