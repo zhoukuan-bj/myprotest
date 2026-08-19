@@ -20,7 +20,7 @@ function createWindow() {
   // mainWindow.loadFile('index.html');
   mainWindow.loadFile(mpath.join(__dirname, 'index.html'));
   // 开发调试控制台，正式打包注释
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
 }
 
 app.whenReady().then(createWindow);
