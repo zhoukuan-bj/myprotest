@@ -34,10 +34,17 @@ jobs:
       # 4.执行打包，输出dist/Excel工具‑setup.exe
       - name: run electron-builder build
         run: npm run build
-
+      - name: Rename artifacts
+        run: |
+          Rename‑Item "dist\sjexcel‑tool 1.0.0.exe" "Excel工具.exe"
+          Rename‑Item "dist\sjexcel‑tool Setup 1.0.0.exe" "Excel工具‑setup.exe"
+        shell: pwsh
       # 5.上传产物，编译完可以网页下载
       - name: Upload setup artifact
         uses: actions/upload-artifact@v4
         with:
-          name: windows-exe
-          path: dist/*.exe
+          name: windows‑build
+          path: |
+            dist\Excel工具.exe
+            dist\Excel工具‑setup.exe
+          if‑no‑files‑found: error

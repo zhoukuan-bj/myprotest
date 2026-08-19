@@ -1,6 +1,6 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const mpath = require('path');
-
+app.disableHardwareAcceleration();
 let mainWindow;
 
 function createWindow() {
